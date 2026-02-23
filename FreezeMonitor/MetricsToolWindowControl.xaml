@@ -1,0 +1,134 @@
+<UserControl x:Class="FreezeMonitor.MetricsToolWindowControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
+             mc:Ignorable="d"
+             d:DesignHeight="540" d:DesignWidth="280"
+             Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
+             Foreground="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowTextBrushKey}}">
+    <UserControl.Resources>
+        <Style TargetType="Separator">
+            <Setter Property="Background"
+                    Value="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="12,10,12,12">
+
+            <!-- ── Title + status dot ──────────────────────────────────── -->
+            <DockPanel Margin="0,0,0,10">
+                <Ellipse x:Name="StatusDot"
+                         Width="10" Height="10" Fill="#4EC9B0"
+                         VerticalAlignment="Center"
+                         DockPanel.Dock="Right" Margin="6,0,0,0"/>
+                <TextBlock Text="UI Thread Responsiveness"
+                           FontWeight="SemiBold" FontSize="13"
+                           VerticalAlignment="Center"/>
+            </DockPanel>
+
+            <!-- ── LAST 5 SECONDS ──────────────────────────────────────── -->
+            <TextBlock Text="LAST 5 SECONDS" FontSize="10" Opacity="0.6" Margin="0,0,0,4"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="22"/>  <!-- Latest -->
+                    <RowDefinition Height="22"/>  <!-- Mean -->
+                    <RowDefinition Height="22"/>  <!-- P50 -->
+                    <RowDefinition Height="22"/>  <!-- P95 -->
+                    <RowDefinition Height="22"/>  <!-- P99 -->
+                    <RowDefinition Height="22"/>  <!-- Max -->
+                    <RowDefinition Height="6"/>   <!-- spacer -->
+                    <RowDefinition Height="22"/>  <!-- >100 ms -->
+                    <RowDefinition Height="22"/>  <!-- >250 ms -->
+                    <RowDefinition Height="22"/>  <!-- >1000 ms -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"  Text="Latest"     VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="0"  Grid.Column="1" x:Name="WLatestText"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="1"  Text="Mean"       VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="1"  Grid.Column="1" x:Name="WMeanText"    Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="2"  Text="P50"        VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2"  Grid.Column="1" x:Name="WP50Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="3"  Text="P95"        VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="3"  Grid.Column="1" x:Name="WP95Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="4"  Text="P99"        VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="4"  Grid.Column="1" x:Name="WP99Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="5"  Text="Max"        VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="5"  Grid.Column="1" x:Name="WMaxText"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="7"  Text="&gt; 100 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="7"  Grid.Column="1" x:Name="WOver100Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="8"  Text="&gt; 250 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="8"  Grid.Column="1" x:Name="WOver250Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="9"  Text="&gt; 1000 ms" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="9"  Grid.Column="1" x:Name="WOver1000Text" Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+            </Grid>
+
+            <Separator Margin="0,8"/>
+
+            <!-- ── SESSION ─────────────────────────────────────────────── -->
+            <TextBlock Text="SESSION" FontSize="10" Opacity="0.6" Margin="0,0,0,4"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="22"/>  <!-- Mean -->
+                    <RowDefinition Height="22"/>  <!-- P50 ~ -->
+                    <RowDefinition Height="22"/>  <!-- P95 ~ -->
+                    <RowDefinition Height="22"/>  <!-- P99 ~ -->
+                    <RowDefinition Height="22"/>  <!-- Max -->
+                    <RowDefinition Height="6"/>   <!-- spacer -->
+                    <RowDefinition Height="22"/>  <!-- >100 ms -->
+                    <RowDefinition Height="22"/>  <!-- >250 ms -->
+                    <RowDefinition Height="22"/>  <!-- >1000 ms -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"  Text="Mean"      VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="0"  Grid.Column="1" x:Name="SMeanText"    Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="1"  Text="P50 ~"     VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="1"  Grid.Column="1" x:Name="SP50Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="2"  Text="P95 ~"     VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2"  Grid.Column="1" x:Name="SP95Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="3"  Text="P99 ~"     VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="3"  Grid.Column="1" x:Name="SP99Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="4"  Text="Max"       VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="4"  Grid.Column="1" x:Name="SMaxText"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="6"  Text="&gt; 100 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="6"  Grid.Column="1" x:Name="SOver100Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="7"  Text="&gt; 250 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="7"  Grid.Column="1" x:Name="SOver250Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+
+                <TextBlock Grid.Row="8"  Text="&gt; 1000 ms" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="8"  Grid.Column="1" x:Name="SOver1000Text" Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+            </Grid>
+
+            <Separator Margin="0,8"/>
+
+            <!-- ── PROFILER ────────────────────────────────────────────── -->
+            <TextBlock Text="PROFILER" FontSize="10" Opacity="0.6" Margin="0,0,0,4"/>
+            <TextBlock x:Name="ProfilerStatusText" Text="Idle" TextWrapping="Wrap"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

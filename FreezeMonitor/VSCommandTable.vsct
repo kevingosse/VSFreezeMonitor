@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <Extern href="stdidcmd.h"/>
+  <Extern href="vsshlids.h"/>
+
+  <Commands package="guidFreezeMonitorPackage">
+    <Buttons>
+      <Button guid="guidMetricsToolWindowCmdSet" id="MetricsToolWindowCommandId" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS0"/>
+        <Strings>
+          <ButtonText>Freeze Monitor</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <GuidSymbol name="guidFreezeMonitorPackage" value="{e3de9e0e-d97a-4b32-a475-00340bf94ea0}" />
+    <GuidSymbol name="guidMetricsToolWindowCmdSet" value="{2c5f9b7e-4e3a-4e8f-b2d7-1c5a3b6e9f4c}">
+      <IDSymbol name="MetricsToolWindowCommandId" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>
