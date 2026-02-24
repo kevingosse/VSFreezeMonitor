@@ -22,8 +22,8 @@
                          Foreground="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowTextBrushKey}}"
                          Checked="AutoSave"
                          Margin="0,0,0,4"/>
-            <RadioButton x:Name="ModeOnlyWhenSolutionLoaded"
-                         Content="Only when solution loaded"
+            <RadioButton x:Name="ModeOnlyThisSession"
+                         Content="Only this session"
                          GroupName="ProfilingMode"
                          Foreground="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowTextBrushKey}}"
                          Checked="AutoSave"

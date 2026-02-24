@@ -35,7 +35,7 @@ namespace FreezeMonitor
             {
                 var opts = Options;
                 ModeOff.IsChecked = opts.ProfilingMode == ProfilingMode.Off;
-                ModeOnlyWhenSolutionLoaded.IsChecked = opts.ProfilingMode == ProfilingMode.OnlyWhenSolutionLoaded;
+                ModeOnlyThisSession.IsChecked = opts.ProfilingMode == ProfilingMode.OnlyThisSession;
                 ModeAlwaysOn.IsChecked = opts.ProfilingMode == ProfilingMode.AlwaysOn;
                 StartDelayTextBox.Text = opts.StartDelaySeconds.ToString();
                 SnapshotFolderTextBox.Text = string.IsNullOrWhiteSpace(opts.SnapshotFolder)
@@ -56,12 +56,11 @@ namespace FreezeMonitor
         private void SaveSettings()
         {
             var opts = Options;
-            if (ModeOff.IsChecked == true)
-                opts.ProfilingMode = ProfilingMode.Off;
-            else if (ModeAlwaysOn.IsChecked == true)
-                opts.ProfilingMode = ProfilingMode.AlwaysOn;
-            else
-                opts.ProfilingMode = ProfilingMode.OnlyWhenSolutionLoaded;
+            opts.ProfilingMode = ModeAlwaysOn.IsChecked == true
+                ? ProfilingMode.AlwaysOn
+                : ModeOnlyThisSession.IsChecked == true
+                    ? ProfilingMode.OnlyThisSession
+                    : ProfilingMode.Off;
 
             if (int.TryParse(StartDelayTextBox.Text, out int delay) && delay >= 1)
             {

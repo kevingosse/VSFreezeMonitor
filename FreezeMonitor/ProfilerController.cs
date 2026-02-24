@@ -28,16 +28,6 @@ internal sealed class ProfilerController : IDisposable
     // Both use Volatile so the watchdog always sees the latest value.
     private long _lastHighLatencyTick;
 
-    // 0 = solution not yet fully loaded; 1 = fully loaded (or gating is disabled).
-    // Written on the UI thread via UIContextChanged; read on the watchdog thread.
-    private int _solutionLoaded;
-
-    // Stopwatch timestamp of the moment the profiling gate opened (solution loaded, or
-    // Start() called when gating is disabled / solution was already loaded).
-    // The watchdog will only trigger on freezes whose last sample arrived after this tick,
-    // preventing the solution-load freeze itself from immediately starting the profiler.
-    private long _gateOpenedTick;
-
     private static readonly long OneSecondTicks = Stopwatch.Frequency;
     private static readonly long HundredMsTicks = (long)(0.100 * Stopwatch.Frequency);
 
@@ -82,19 +72,6 @@ internal sealed class ProfilerController : IDisposable
     {
         ThreadHelper.ThrowIfNotOnUIThread();
 
-        // Seed the solution-loaded flag from the current context state.
-        var ctx = KnownUIContexts.SolutionExistsAndFullyLoadedContext;
-        bool isLoaded = ctx.IsActive;
-        Volatile.Write(ref _solutionLoaded, isLoaded ? 1 : 0);
-
-        // Open the gate now if gating is disabled or the solution is already loaded;
-        // otherwise the gate opens when OnSolutionLoadContextChanged fires.
-        var mode = _options.ProfilingMode;
-        if (mode == ProfilingMode.AlwaysOn || (mode == ProfilingMode.OnlyWhenSolutionLoaded && isLoaded))
-            Volatile.Write(ref _gateOpenedTick, Stopwatch.GetTimestamp());
-
-        ctx.UIContextChanged += OnSolutionLoadContextChanged;
-
         // Initialise so the watchdog doesn't think there's already been a freeze.
         _lastHighLatencyTick = Stopwatch.GetTimestamp();
 
@@ -102,22 +79,8 @@ internal sealed class ProfilerController : IDisposable
         _watchdog = _jtf.RunAsync(() => WatchdogLoopAsync(_cts.Token));
     }
 
-    // Called on the UI thread when the solution-loaded context flips.
-    private void OnSolutionLoadContextChanged(object sender, UIContextChangedEventArgs e)
-    {
-        if (e.Activated)
-        {
-            // Record when the gate opened so the watchdog can ignore any freeze
-            // that was already in progress during solution load.
-            Volatile.Write(ref _gateOpenedTick, Stopwatch.GetTimestamp());
-            Volatile.Write(ref _solutionLoaded, 1);
-        }
-    }
-
     public async Task StopAsync()
     {
-        KnownUIContexts.SolutionExistsAndFullyLoadedContext.UIContextChanged
-            -= OnSolutionLoadContextChanged;
         _metrics.SampleReceived -= OnSampleReceived;
         _cts?.Cancel();
         try { if (_watchdog != null) await _watchdog; }
@@ -143,21 +106,10 @@ internal sealed class ProfilerController : IDisposable
 
                 var opts = _options;
 
-                // Only start profiling if the solution-load gate is satisfied.
-                bool gateOpen = opts.ProfilingMode != ProfilingMode.Off
-                    && (opts.ProfilingMode == ProfilingMode.AlwaysOn
-                        || Volatile.Read(ref _solutionLoaded) == 1);
-
-                // Also require that the last sample arrived after the gate opened.
-                // This prevents the solution-load freeze itself from triggering the
-                // profiler the moment the context flips to "fully loaded".
-                bool freezeStartedAfterGate =
-                    _metrics.LastSampleTicks >= Volatile.Read(ref _gateOpenedTick);
-
                 // Only profile if the freeze has lasted at least StartDelaySeconds.
                 long startDelayTicks = (long)(opts.StartDelaySeconds * (double)Stopwatch.Frequency);
 
-                if (!_isProfiling && gateOpen && freezeStartedAfterGate
+                if (!_isProfiling && opts.ProfilingMode != ProfilingMode.Off
                     && timeSinceLastSample >= startDelayTicks)
                 {
                     _isProfiling = true;
