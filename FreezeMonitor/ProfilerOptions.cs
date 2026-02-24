@@ -19,14 +19,14 @@ internal sealed class ProfilerOptions : DialogPage
         "Off: automatic profiling is disabled. " +
         "OnlyWhenSolutionLoaded: profiling starts only after the solution is fully loaded. " +
         "AlwaysOn: profiling starts as soon as the package initialises.")]
-    public ProfilingMode ProfilingMode { get; set; } = ProfilingMode.OnlyWhenSolutionLoaded;
+    public ProfilingMode ProfilingMode { get; set; } = ProfilingMode.Off;
 
     [Category("Profiler")]
     [DisplayName("Delay before profiling (seconds)")]
     [Description(
         "Minimum number of seconds the UI must be unresponsive before automatic " +
         "profiling starts. Increase to avoid capturing short freezes.")]
-    public int StartDelaySeconds { get; set; } = 1;
+    public int StartDelaySeconds { get; set; } = 5;
 
     [Category("Profiler")]
     [DisplayName("Snapshot folder")]

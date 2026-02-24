@@ -8,6 +8,7 @@ namespace FreezeMonitor
     public partial class SettingsToolWindowControl : UserControl
     {
         private FreezeMonitorPackage _package;
+        private bool _loading;
 
         public SettingsToolWindowControl()
         {
@@ -29,17 +30,28 @@ namespace FreezeMonitor
 
         private void LoadSettings()
         {
-            var opts = Options;
-            ModeOff.IsChecked = opts.ProfilingMode == ProfilingMode.Off;
-            ModeOnlyWhenSolutionLoaded.IsChecked = opts.ProfilingMode == ProfilingMode.OnlyWhenSolutionLoaded;
-            ModeAlwaysOn.IsChecked = opts.ProfilingMode == ProfilingMode.AlwaysOn;
-            StartDelayTextBox.Text = opts.StartDelaySeconds.ToString();
-            SnapshotFolderTextBox.Text = string.IsNullOrWhiteSpace(opts.SnapshotFolder)
-                ? DefaultSnapshotFolder
-                : opts.SnapshotFolder;
+            _loading = true;
+            try
+            {
+                var opts = Options;
+                ModeOff.IsChecked = opts.ProfilingMode == ProfilingMode.Off;
+                ModeOnlyWhenSolutionLoaded.IsChecked = opts.ProfilingMode == ProfilingMode.OnlyWhenSolutionLoaded;
+                ModeAlwaysOn.IsChecked = opts.ProfilingMode == ProfilingMode.AlwaysOn;
+                StartDelayTextBox.Text = opts.StartDelaySeconds.ToString();
+                SnapshotFolderTextBox.Text = string.IsNullOrWhiteSpace(opts.SnapshotFolder)
+                    ? DefaultSnapshotFolder
+                    : opts.SnapshotFolder;
+            }
+            finally
+            {
+                _loading = false;
+            }
         }
 
-        private void AutoSave(object sender, RoutedEventArgs e) => SaveSettings();
+        private void AutoSave(object sender, RoutedEventArgs e)
+        {
+            if (!_loading) SaveSettings();
+        }
 
         private void SaveSettings()
         {
@@ -51,8 +63,16 @@ namespace FreezeMonitor
             else
                 opts.ProfilingMode = ProfilingMode.OnlyWhenSolutionLoaded;
 
-            if (int.TryParse(StartDelayTextBox.Text, out int delay) && delay >= 0)
+            if (int.TryParse(StartDelayTextBox.Text, out int delay) && delay >= 1)
+            {
                 opts.StartDelaySeconds = delay;
+                StartDelayError.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                StartDelayError.Text = "Value must be a whole number ≥ 1.";
+                StartDelayError.Visibility = Visibility.Visible;
+            }
 
             opts.SnapshotFolder = SnapshotFolderTextBox.Text.Trim();
             opts.SaveSettingsToStorage();
