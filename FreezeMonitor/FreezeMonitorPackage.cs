@@ -38,21 +38,71 @@ namespace FreezeMonitor
         internal MetricsService MetricsService { get; private set; }
         internal ProfilerController ProfilerController { get; private set; }
 
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        private bool _dotTraceInitialized;
+
+        // Both fired on the UI thread.
+        internal event Action MonitoringStarted;
+        internal event Action MonitoringStopped;
+
+        internal async Task StartMonitoringAsync()
         {
-            await DotTrace.InitAsync(cancellationToken);
+            if (MetricsService != null) return;
 
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            if (!_dotTraceInitialized)
+            {
+                await DotTrace.InitAsync(CancellationToken.None);
+                _dotTraceInitialized = true;
+            }
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            // Start must run on the UI thread so UiThreadSampler can capture its Dispatcher.
+            var options = (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions));
             MetricsService = new MetricsService();
             MetricsService.Start();
 
-            ProfilerController = new ProfilerController(
-                MetricsService,
-                (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions)),
-                JoinableTaskFactory);
+            ProfilerController = new ProfilerController(MetricsService, options, JoinableTaskFactory);
             ProfilerController.Start();
+
+            MonitoringStarted?.Invoke();
+        }
+
+        internal async Task StopMonitoringAsync()
+        {
+            if (MetricsService == null) return;
+
+            if (ProfilerController != null)
+            {
+                await ProfilerController.StopAsync().ConfigureAwait(false);
+                ProfilerController = null;
+            }
+            await MetricsService.StopAsync().ConfigureAwait(false);
+            MetricsService.Dispose();
+            MetricsService = null;
+
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+            MonitoringStopped?.Invoke();
+        }
+
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
+            // Read options on the UI thread first so we know whether to start anything.
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            var options = (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions));
+            bool enabled = options.ProfilingMode != ProfilingMode.Off;
+
+            if (enabled)
+            {
+                // DotTrace.InitAsync may leave us on a background thread.
+                await DotTrace.InitAsync(cancellationToken);
+                _dotTraceInitialized = true;
+                await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+                // Start must run on the UI thread so UiThreadSampler can capture its Dispatcher.
+                MetricsService = new MetricsService();
+                MetricsService.Start();
+
+                ProfilerController = new ProfilerController(MetricsService, options, JoinableTaskFactory);
+                ProfilerController.Start();
+            }
 
             await MetricsToolWindowCommand.InitializeAsync(this);
             await SettingsToolWindowCommand.InitializeAsync(this);

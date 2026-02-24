@@ -15,6 +15,7 @@
         </Style>
     </UserControl.Resources>
 
+    <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="12,10,12,12">
 
@@ -109,4 +110,20 @@
 
         </StackPanel>
     </ScrollViewer>
+
+    <!-- Shown when ProfilingMode = Off; covers all content -->
+    <Border x:Name="DisabledOverlay"
+            Visibility="Collapsed"
+            Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
+            <TextBlock Text="Monitoring is disabled"
+                       FontWeight="SemiBold" FontSize="13"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Enable profiling in Extensions → Freeze Monitor → Settings."
+                       TextWrapping="Wrap" Opacity="0.6"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" TextAlignment="Center"/>
+        </StackPanel>
+    </Border>
+
+    </Grid>
 </UserControl>

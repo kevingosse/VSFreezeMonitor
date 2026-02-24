@@ -22,6 +22,13 @@ namespace FreezeMonitor
             var ctrl = (MetricsToolWindowControl)Content;
             ctrl.Initialize(pkg.MetricsService, pkg.JoinableTaskFactory);
             ctrl.InitializeProfiler(pkg.ProfilerController);
+
+            pkg.MonitoringStarted += () =>
+            {
+                ctrl.Initialize(pkg.MetricsService, pkg.JoinableTaskFactory);
+                ctrl.InitializeProfiler(pkg.ProfilerController);
+            };
+            pkg.MonitoringStopped += () => ctrl.Disable();
         }
     }
 }

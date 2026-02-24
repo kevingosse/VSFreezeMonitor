@@ -19,13 +19,30 @@ namespace FreezeMonitor
 
         internal void Initialize(MetricsService service, JoinableTaskFactory jtf)
         {
+            if (service == null)
+            {
+                DisabledOverlay.Visibility = Visibility.Visible;
+                return;
+            }
+            DisabledOverlay.Visibility = Visibility.Collapsed;
             _service = service;
             _jtf = jtf;
             service.SnapshotUpdated += OnSnapshotUpdated;
         }
 
+        internal void Disable()
+        {
+            if (_service != null)
+            {
+                _service.SnapshotUpdated -= OnSnapshotUpdated;
+                _service = null;
+            }
+            DisabledOverlay.Visibility = Visibility.Visible;
+        }
+
         internal void InitializeProfiler(ProfilerController controller)
         {
+            if (controller == null) return;
             ProfilerStatusText.Text = controller.CurrentStatus;
             controller.StatusChanged += status =>
                 _ = _jtf.RunAsync(async () =>

@@ -56,6 +56,7 @@ namespace FreezeMonitor
         private void SaveSettings()
         {
             var opts = Options;
+            bool wasOff = opts.ProfilingMode == ProfilingMode.Off;
             opts.ProfilingMode = ModeAlwaysOn.IsChecked == true
                 ? ProfilingMode.AlwaysOn
                 : ModeOnlyThisSession.IsChecked == true
@@ -75,6 +76,12 @@ namespace FreezeMonitor
 
             opts.SnapshotFolder = SnapshotFolderTextBox.Text.Trim();
             opts.SaveSettingsToStorage();
+
+            bool isOff = opts.ProfilingMode == ProfilingMode.Off;
+            if (wasOff && !isOff)
+                _ = _package.JoinableTaskFactory.RunAsync(() => _package.StartMonitoringAsync());
+            else if (!wasOff && isOff)
+                _ = _package.JoinableTaskFactory.RunAsync(() => _package.StopMonitoringAsync());
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
