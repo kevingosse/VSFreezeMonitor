@@ -30,6 +30,12 @@ namespace FreezeMonitor
             service.SnapshotUpdated += OnSnapshotUpdated;
         }
 
+        internal void SetDownloadStatus(string status)
+        {
+            DownloadProgressText.Visibility = status != null ? Visibility.Visible : Visibility.Collapsed;
+            if (status != null) DownloadProgressText.Text = status;
+        }
+
         internal void Disable()
         {
             if (_service != null)

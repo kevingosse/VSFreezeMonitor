@@ -29,6 +29,7 @@ namespace FreezeMonitor
                 ctrl.InitializeProfiler(pkg.ProfilerController);
             };
             pkg.MonitoringStopped += () => ctrl.Disable();
+            pkg.DownloadStatusChanged += status => ctrl.SetDownloadStatus(status);
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Profiler.SelfApi;
+using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace FreezeMonitor
@@ -40,20 +41,27 @@ namespace FreezeMonitor
 
         private bool _dotTraceInitialized;
 
-        // Both fired on the UI thread.
+        // All fired on the UI thread.
         internal event Action MonitoringStarted;
         internal event Action MonitoringStopped;
+        internal event Action<string> DownloadStatusChanged;
+
+        private async Task EnsureDotTraceInitAsync(CancellationToken cancellationToken)
+        {
+            if (_dotTraceInitialized) return;
+            var progress = new CoalescingProgress(JoinableTaskFactory,
+                pct => DownloadStatusChanged?.Invoke($"Downloading profiler tools... {pct}%"));
+            await DotTrace.InitAsync(cancellationToken, progress);
+            _dotTraceInitialized = true;
+        }
 
         internal async Task StartMonitoringAsync()
         {
             if (MetricsService != null) return;
 
-            if (!_dotTraceInitialized)
-            {
-                await DotTrace.InitAsync(CancellationToken.None);
-                _dotTraceInitialized = true;
-            }
+            await EnsureDotTraceInitAsync(CancellationToken.None);
             await JoinableTaskFactory.SwitchToMainThreadAsync();
+            DownloadStatusChanged?.Invoke(null); // clear any download message
 
             var options = (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions));
             MetricsService = new MetricsService();
@@ -91,9 +99,7 @@ namespace FreezeMonitor
 
             if (enabled)
             {
-                // DotTrace.InitAsync may leave us on a background thread.
-                await DotTrace.InitAsync(cancellationToken);
-                _dotTraceInitialized = true;
+                await EnsureDotTraceInitAsync(cancellationToken);
                 await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
                 // Start must run on the UI thread so UiThreadSampler can capture its Dispatcher.
@@ -116,6 +122,36 @@ namespace FreezeMonitor
                 MetricsService?.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        // IProgress<double> implementation that coalesces rapid callbacks: only one UI
+        // dispatch is in-flight at a time, always showing the most recent value.
+        private sealed class CoalescingProgress : IProgress<double>
+        {
+            private readonly JoinableTaskFactory _jtf;
+            private readonly Action<int> _report;
+            private int _latest;
+            private int _pending;
+
+            public CoalescingProgress(JoinableTaskFactory jtf, Action<int> report)
+            {
+                _jtf = jtf;
+                _report = report;
+            }
+
+            void IProgress<double>.Report(double value)
+            {
+                Volatile.Write(ref _latest, (int)value);
+                if (Interlocked.Exchange(ref _pending, 1) == 0)
+                {
+                    _ = _jtf.RunAsync(async () =>
+                    {
+                        await _jtf.SwitchToMainThreadAsync();
+                        Interlocked.Exchange(ref _pending, 0);
+                        _report(Volatile.Read(ref _latest));
+                    });
+                }
+            }
         }
     }
 }
