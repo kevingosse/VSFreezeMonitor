@@ -2,21 +2,25 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 
 namespace FreezeMonitor
 {
     public partial class MetricsToolWindowControl : UserControl
     {
         private MetricsService _service;
+        private JoinableTaskFactory _jtf;
 
         public MetricsToolWindowControl()
         {
             InitializeComponent();
         }
 
-        internal void Initialize(MetricsService service)
+        internal void Initialize(MetricsService service, JoinableTaskFactory jtf)
         {
             _service = service;
+            _jtf = jtf;
             service.SnapshotUpdated += OnSnapshotUpdated;
         }
 
@@ -24,13 +28,21 @@ namespace FreezeMonitor
         {
             ProfilerStatusText.Text = controller.CurrentStatus;
             controller.StatusChanged += status =>
-                Dispatcher.BeginInvoke(new Action(() => ProfilerStatusText.Text = status));
+                _ = _jtf.RunAsync(async () =>
+                {
+                    await _jtf.SwitchToMainThreadAsync();
+                    ProfilerStatusText.Text = status;
+                });
         }
 
         private void OnSnapshotUpdated(MetricsSnapshot snapshot)
         {
             // Timer fires on a thread-pool thread; marshal to the UI thread.
-            Dispatcher.BeginInvoke(new Action(() => ApplySnapshot(snapshot)));
+            _ = _jtf.RunAsync(async () =>
+            {
+                await _jtf.SwitchToMainThreadAsync();
+                ApplySnapshot(snapshot);
+            });
         }
 
         private void ApplySnapshot(MetricsSnapshot snap)

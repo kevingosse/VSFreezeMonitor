@@ -20,7 +20,7 @@ namespace FreezeMonitor
             base.OnToolWindowCreated();
             var pkg  = (FreezeMonitorPackage)Package;
             var ctrl = (MetricsToolWindowControl)Content;
-            ctrl.Initialize(pkg.MetricsService);
+            ctrl.Initialize(pkg.MetricsService, pkg.JoinableTaskFactory);
             ctrl.InitializeProfiler(pkg.ProfilerController);
         }
     }

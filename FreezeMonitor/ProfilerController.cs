@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Profiler.SelfApi;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 
 namespace FreezeMonitor;
 
@@ -12,9 +13,10 @@ internal sealed class ProfilerController : IDisposable
 {
     private readonly MetricsService _metrics;
     private readonly ProfilerOptions _options;
+    private readonly JoinableTaskFactory _jtf;
 
     private CancellationTokenSource _cts;
-    private Task _watchdog;
+    private JoinableTask _watchdog;
 
     // Only written/read on the watchdog thread.
     private bool _isProfiling;
@@ -42,10 +44,11 @@ internal sealed class ProfilerController : IDisposable
     public event Action<string> StatusChanged;
     public string CurrentStatus { get; private set; } = "Idle";
 
-    public ProfilerController(MetricsService metrics, ProfilerOptions options)
+    public ProfilerController(MetricsService metrics, ProfilerOptions options, JoinableTaskFactory jtf)
     {
         _metrics = metrics;
         _options = options;
+        _jtf = jtf;
 
         // UI-thread callback: every sample with ≥100 ms latency resets the recovery clock.
         metrics.SampleReceived += OnSampleReceived;
@@ -72,6 +75,8 @@ internal sealed class ProfilerController : IDisposable
     // Must be called on the UI thread.
     public void Start()
     {
+        ThreadHelper.ThrowIfNotOnUIThread();
+
         // Seed the solution-loaded flag from the current context state.
         var ctx = KnownUIContexts.SolutionExistsAndFullyLoadedContext;
         bool isLoaded = ctx.IsActive;
@@ -89,7 +94,7 @@ internal sealed class ProfilerController : IDisposable
         _lastHighLatencyTick = Stopwatch.GetTimestamp();
 
         _cts = new CancellationTokenSource();
-        _watchdog = Task.Run(() => WatchdogLoopAsync(_cts.Token));
+        _watchdog = _jtf.RunAsync(() => WatchdogLoopAsync(_cts.Token));
     }
 
     // Called on the UI thread when the solution-loaded context flips.
@@ -110,7 +115,7 @@ internal sealed class ProfilerController : IDisposable
             -= OnSolutionLoadContextChanged;
         _metrics.SampleReceived -= OnSampleReceived;
         _cts?.Cancel();
-        try { if (_watchdog != null) await _watchdog.ConfigureAwait(false); }
+        try { if (_watchdog != null) await _watchdog; }
         catch (OperationCanceledException) { }
         finally { _cts?.Dispose(); }
     }

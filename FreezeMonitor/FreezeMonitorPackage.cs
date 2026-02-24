@@ -50,7 +50,8 @@ namespace FreezeMonitor
 
             ProfilerController = new ProfilerController(
                 MetricsService,
-                (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions)));
+                (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions)),
+                JoinableTaskFactory);
             ProfilerController.Start();
 
             await MetricsToolWindowCommand.InitializeAsync(this);

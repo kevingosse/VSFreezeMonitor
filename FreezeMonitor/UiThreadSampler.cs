@@ -50,11 +50,13 @@ public sealed class UiThreadSampler : IDisposable
             // The delta to when the callback runs is the true UI-thread queue latency.
             var scheduledAt = Stopwatch.GetTimestamp();
 
-            _dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+#pragma warning disable VSTHRD001 // DispatcherPriority.Input is intentional: it defines the measurement priority
+            _ = _dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
             {
                 var elapsed = Stopwatch.GetTimestamp() - scheduledAt;
                 _onSample(TimeSpan.FromSeconds((double)elapsed / Stopwatch.Frequency));
             }));
+#pragma warning restore VSTHRD001
         }
     }
 
