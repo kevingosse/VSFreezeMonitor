@@ -11,8 +11,7 @@ namespace FreezeMonitor;
 internal sealed class ProfilerController : IDisposable
 {
     private readonly MetricsService _metrics;
-    private readonly Func<bool> _waitForSolutionLoad;
-    private readonly string _snapshotDir;
+    private readonly ProfilerOptions _options;
 
     private CancellationTokenSource _cts;
     private Task _watchdog;
@@ -43,17 +42,24 @@ internal sealed class ProfilerController : IDisposable
     public event Action<string> StatusChanged;
     public string CurrentStatus { get; private set; } = "Idle";
 
-    public ProfilerController(MetricsService metrics, Func<bool> waitForSolutionLoad)
+    public ProfilerController(MetricsService metrics, ProfilerOptions options)
     {
         _metrics = metrics;
-        _waitForSolutionLoad = waitForSolutionLoad;
-        _snapshotDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FreezeMonitor", "Snapshots");
-        Directory.CreateDirectory(_snapshotDir);
+        _options = options;
 
         // UI-thread callback: every sample with ≥100 ms latency resets the recovery clock.
         metrics.SampleReceived += OnSampleReceived;
+    }
+
+    private string GetSnapshotDir()
+    {
+        var folder = _options.SnapshotFolder;
+        if (string.IsNullOrWhiteSpace(folder))
+            folder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FreezeMonitor", "Snapshots");
+        Directory.CreateDirectory(folder);
+        return folder;
     }
 
     // Called on the UI thread.
@@ -73,7 +79,8 @@ internal sealed class ProfilerController : IDisposable
 
         // Open the gate now if gating is disabled or the solution is already loaded;
         // otherwise the gate opens when OnSolutionLoadContextChanged fires.
-        if (!_waitForSolutionLoad() || isLoaded)
+        var mode = _options.ProfilingMode;
+        if (mode == ProfilingMode.AlwaysOn || (mode == ProfilingMode.OnlyWhenSolutionLoaded && isLoaded))
             Volatile.Write(ref _gateOpenedTick, Stopwatch.GetTimestamp());
 
         ctx.UIContextChanged += OnSolutionLoadContextChanged;
@@ -124,10 +131,12 @@ internal sealed class ProfilerController : IDisposable
             {
                 Volatile.Write(ref _lastHighLatencyTick, now);
 
-                // Only start profiling if the solution-load gate is satisfied:
-                // either the setting is off, or the solution is fully loaded.
-                bool gateOpen = !_waitForSolutionLoad()
-                    || Volatile.Read(ref _solutionLoaded) == 1;
+                var opts = _options;
+
+                // Only start profiling if the solution-load gate is satisfied.
+                bool gateOpen = opts.ProfilingMode != ProfilingMode.Off
+                    && (opts.ProfilingMode == ProfilingMode.AlwaysOn
+                        || Volatile.Read(ref _solutionLoaded) == 1);
 
                 // Also require that the last sample arrived after the gate opened.
                 // This prevents the solution-load freeze itself from triggering the
@@ -135,8 +144,11 @@ internal sealed class ProfilerController : IDisposable
                 bool freezeStartedAfterGate =
                     _metrics.LastSampleTicks >= Volatile.Read(ref _gateOpenedTick);
 
+                // Only profile if the freeze has lasted at least StartDelaySeconds.
+                long startDelayTicks = (long)(opts.StartDelaySeconds * (double)Stopwatch.Frequency);
+
                 if (!_isProfiling && gateOpen && freezeStartedAfterGate
-                    && timeSinceLastSample >= OneSecondTicks)
+                    && timeSinceLastSample >= startDelayTicks)
                 {
                     _isProfiling = true;
                     StartProfiling();
@@ -160,12 +172,12 @@ internal sealed class ProfilerController : IDisposable
     {
         try
         {
-            SetStatus("● Recording...");
+            _ = Task.Run(() => SetStatus("● Recording..."));
             var config = new DotTrace.Config()
                 .UseTimelineProfilingType()
                 .WithCommandLineArgument("--download-symbols")
-                .SaveToDir(_snapshotDir);
-            
+                .SaveToDir(GetSnapshotDir());
+
             DotTrace.Attach(config);
             DotTrace.StartCollectingData();
         }
@@ -179,13 +191,14 @@ internal sealed class ProfilerController : IDisposable
     private async Task StopProfilingAsync()
     {
         SetStatus("Saving snapshot...");
+        var snapshotDir = GetSnapshotDir();
         try
         {
             string savedFile = await Task.Run(() =>
             {
                 DotTrace.SaveData();
                 DotTrace.Detach();
-                return FindLatestSnapshot(_snapshotDir);
+                return FindLatestSnapshot(snapshotDir);
             }).ConfigureAwait(false);
 
             SetStatus(savedFile != null

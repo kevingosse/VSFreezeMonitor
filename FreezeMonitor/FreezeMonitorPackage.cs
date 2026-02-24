@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -28,6 +28,7 @@ namespace FreezeMonitor
     [Guid(PackageGuidString)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(MetricsToolWindow))]
+    [ProvideToolWindow(typeof(SettingsToolWindow))]
     [ProvideOptionPage(typeof(ProfilerOptions),
         "Freeze Monitor", "Profiler", 0, 0, true)]
     public sealed class FreezeMonitorPackage : AsyncPackage
@@ -49,10 +50,11 @@ namespace FreezeMonitor
 
             ProfilerController = new ProfilerController(
                 MetricsService,
-                () => ((ProfilerOptions)GetDialogPage(typeof(ProfilerOptions))).WaitForSolutionLoad);
+                (ProfilerOptions)GetDialogPage(typeof(ProfilerOptions)));
             ProfilerController.Start();
 
             await MetricsToolWindowCommand.InitializeAsync(this);
+            await SettingsToolWindowCommand.InitializeAsync(this);
         }
 
         protected override void Dispose(bool disposing)

@@ -5,11 +5,36 @@
   <Extern href="vsshlids.h"/>
 
   <Commands package="guidFreezeMonitorPackage">
+    <Groups>
+      <Group guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorMenuGroup" priority="0x0100">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_EXTENSIONS"/>
+      </Group>
+      <Group guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorSubMenuGroup" priority="0x0100">
+        <Parent guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorSubMenu"/>
+      </Group>
+    </Groups>
+
+    <Menus>
+      <Menu guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorSubMenu" priority="0x0100" type="Menu">
+        <Parent guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorMenuGroup"/>
+        <Strings>
+          <MenuText>Freeze Monitor</MenuText>
+          <ButtonText>Freeze Monitor</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+
     <Buttons>
       <Button guid="guidMetricsToolWindowCmdSet" id="MetricsToolWindowCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS0"/>
+        <Parent guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorSubMenuGroup"/>
         <Strings>
-          <ButtonText>Freeze Monitor</ButtonText>
+          <ButtonText>Status</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidMetricsToolWindowCmdSet" id="SettingsToolWindowCommandId" priority="0x0101" type="Button">
+        <Parent guid="guidMetricsToolWindowCmdSet" id="FreezeMonitorSubMenuGroup"/>
+        <Strings>
+          <ButtonText>Settings</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -17,8 +42,15 @@
 
   <Symbols>
     <GuidSymbol name="guidFreezeMonitorPackage" value="{e3de9e0e-d97a-4b32-a475-00340bf94ea0}" />
+    <GuidSymbol name="guidSHLMainMenu" value="{d309f791-903f-11d0-9efc-00a0c911004f}">
+      <IDSymbol name="IDM_VS_MENU_EXTENSIONS" value="0x0091" />
+    </GuidSymbol>
     <GuidSymbol name="guidMetricsToolWindowCmdSet" value="{2c5f9b7e-4e3a-4e8f-b2d7-1c5a3b6e9f4c}">
       <IDSymbol name="MetricsToolWindowCommandId" value="0x0100" />
+      <IDSymbol name="SettingsToolWindowCommandId" value="0x0101" />
+      <IDSymbol name="FreezeMonitorMenuGroup" value="0x1000" />
+      <IDSymbol name="FreezeMonitorSubMenu" value="0x1001" />
+      <IDSymbol name="FreezeMonitorSubMenuGroup" value="0x1002" />
     </GuidSymbol>
   </Symbols>
 
