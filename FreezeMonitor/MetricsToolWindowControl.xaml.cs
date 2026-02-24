@@ -33,6 +33,14 @@ namespace FreezeMonitor
                     await _jtf.SwitchToMainThreadAsync();
                     ProfilerStatusText.Text = status;
                 });
+            controller.SnapshotSaved += entry =>
+                _ = _jtf.RunAsync(async () =>
+                {
+                    await _jtf.SwitchToMainThreadAsync();
+                    SnapshotListBox.Text = SnapshotListBox.Text.Length == 0
+                        ? entry
+                        : entry + "\n" + SnapshotListBox.Text;
+                });
         }
 
         private void OnSnapshotUpdated(MetricsSnapshot snapshot)
@@ -49,29 +57,21 @@ namespace FreezeMonitor
         {
             var w = snap.Window;
             WLatestText.Text   = FormatMs(w.LatestMs);
-            WMeanText.Text     = FormatMs(w.MeanMs);
-            WP50Text.Text      = FormatMs(w.P50Ms);
-            WP95Text.Text      = FormatMs(w.P95Ms);
-            WP99Text.Text      = FormatMs(w.P99Ms);
             WMaxText.Text      = FormatMs(w.MaxMs);
             WOver100Text.Text  = FormatCount(w.Over100Ms,  w.SampleCount);
             WOver250Text.Text  = FormatCount(w.Over250Ms,  w.SampleCount);
             WOver1000Text.Text = FormatCount(w.Over1000Ms, w.SampleCount);
 
             var s = snap.Session;
-            SMeanText.Text     = FormatMs(s.MeanMs);
-            SP50Text.Text      = FormatMs(s.P50Ms);
-            SP95Text.Text      = FormatMs(s.P95Ms);
-            SP99Text.Text      = FormatMs(s.P99Ms);
             SMaxText.Text      = FormatMs(s.MaxMs);
             SOver100Text.Text  = FormatCount(s.Over100Ms,  s.SampleCount);
             SOver250Text.Text  = FormatCount(s.Over250Ms,  s.SampleCount);
             SOver1000Text.Text = FormatCount(s.Over1000Ms, s.SampleCount);
 
-            // Status dot colour driven by the window P95 (current responsiveness).
+            // Status dot colour driven by the window Max (current responsiveness).
             Color dot;
-            if      (w.P95Ms <  50) dot = Color.FromRgb(0x4E, 0xC9, 0xB0); // green
-            else if (w.P95Ms < 200) dot = Color.FromRgb(0xFF, 0xC6, 0x6D); // amber
+            if      (w.MaxMs <  50) dot = Color.FromRgb(0x4E, 0xC9, 0xB0); // green
+            else if (w.MaxMs < 200) dot = Color.FromRgb(0xFF, 0xC6, 0x6D); // amber
             else                    dot = Color.FromRgb(0xF4, 0x47, 0x47); // red
             StatusDot.Fill = new SolidColorBrush(dot);
         }

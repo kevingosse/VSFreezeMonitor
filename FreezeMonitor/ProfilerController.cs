@@ -20,6 +20,7 @@ internal sealed class ProfilerController : IDisposable
 
     // Only written/read on the watchdog thread.
     private bool _isProfiling;
+    private long _profilingStartTick;
 
     // Written from two threads:
     //   • watchdog thread  — while the UI is currently overdue (ongoing freeze)
@@ -43,6 +44,10 @@ internal sealed class ProfilerController : IDisposable
     // Raised on the watchdog thread; subscribers must marshal to UI if needed.
     public event Action<string> StatusChanged;
     public string CurrentStatus { get; private set; } = "Idle";
+
+    // Fired (on the watchdog thread) when a snapshot is successfully saved.
+    // Argument is the display string: "filename.dtp (12.3 s)".
+    public event Action<string> SnapshotSaved;
 
     public ProfilerController(MetricsService metrics, ProfilerOptions options, JoinableTaskFactory jtf)
     {
@@ -184,6 +189,7 @@ internal sealed class ProfilerController : IDisposable
                 .SaveToDir(GetSnapshotDir());
 
             DotTrace.Attach(config);
+            _profilingStartTick = Stopwatch.GetTimestamp();
             DotTrace.StartCollectingData();
         }
         catch (Exception ex)
@@ -199,16 +205,26 @@ internal sealed class ProfilerController : IDisposable
         var snapshotDir = GetSnapshotDir();
         try
         {
+            var elapsed = TimeSpan.Zero;
+
             string savedFile = await Task.Run(() =>
             {
+                elapsed = TimeSpan.FromSeconds(
+                    (double)(Stopwatch.GetTimestamp() - _profilingStartTick) / Stopwatch.Frequency);
                 DotTrace.SaveData();
                 DotTrace.Detach();
                 return FindLatestSnapshot(snapshotDir);
             }).ConfigureAwait(false);
+            string duration = elapsed.TotalMinutes >= 1
+                ? $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:D2}"
+                : $"{elapsed.TotalSeconds:F1} s";
 
             SetStatus(savedFile != null
-                ? $"Saved: {Path.GetFileName(savedFile)}"
-                : "Saved");
+                ? $"Saved: {Path.GetFileName(savedFile)} ({duration})"
+                : $"Saved ({duration})");
+
+            if (savedFile != null)
+                SnapshotSaved?.Invoke($"{Path.GetFileName(savedFile)} ({duration})");
         }
         catch (Exception ex)
         {

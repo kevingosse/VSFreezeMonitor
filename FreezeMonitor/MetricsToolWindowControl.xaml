@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
              mc:Ignorable="d"
-             d:DesignHeight="540" d:DesignWidth="280"
+             d:DesignHeight="360" d:DesignWidth="280"
              Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
              Foreground="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowTextBrushKey}}">
     <UserControl.Resources>
@@ -38,10 +38,6 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="22"/>  <!-- Latest -->
-                    <RowDefinition Height="22"/>  <!-- Mean -->
-                    <RowDefinition Height="22"/>  <!-- P50 -->
-                    <RowDefinition Height="22"/>  <!-- P95 -->
-                    <RowDefinition Height="22"/>  <!-- P99 -->
                     <RowDefinition Height="22"/>  <!-- Max -->
                     <RowDefinition Height="6"/>   <!-- spacer -->
                     <RowDefinition Height="22"/>  <!-- >100 ms -->
@@ -52,29 +48,17 @@
                 <TextBlock Grid.Row="0"  Text="Latest"     VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="0"  Grid.Column="1" x:Name="WLatestText"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="1"  Text="Mean"       VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="1"  Grid.Column="1" x:Name="WMeanText"    Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="1"  Text="Max"        VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="1"  Grid.Column="1" x:Name="WMaxText"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="2"  Text="P50"        VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="2"  Grid.Column="1" x:Name="WP50Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="3"  Text="&gt; 100 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="3"  Grid.Column="1" x:Name="WOver100Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="3"  Text="P95"        VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="3"  Grid.Column="1" x:Name="WP95Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="4"  Text="&gt; 250 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="4"  Grid.Column="1" x:Name="WOver250Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="4"  Text="P99"        VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="4"  Grid.Column="1" x:Name="WP99Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="5"  Text="Max"        VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="5"  Grid.Column="1" x:Name="WMaxText"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="7"  Text="&gt; 100 ms"  VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="7"  Grid.Column="1" x:Name="WOver100Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="8"  Text="&gt; 250 ms"  VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="8"  Grid.Column="1" x:Name="WOver250Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="9"  Text="&gt; 1000 ms" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="9"  Grid.Column="1" x:Name="WOver1000Text" Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="5"  Text="&gt; 1000 ms" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="5"  Grid.Column="1" x:Name="WOver1000Text" Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
             </Grid>
 
             <Separator Margin="0,8"/>
@@ -87,10 +71,6 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="22"/>  <!-- Mean -->
-                    <RowDefinition Height="22"/>  <!-- P50 ~ -->
-                    <RowDefinition Height="22"/>  <!-- P95 ~ -->
-                    <RowDefinition Height="22"/>  <!-- P99 ~ -->
                     <RowDefinition Height="22"/>  <!-- Max -->
                     <RowDefinition Height="6"/>   <!-- spacer -->
                     <RowDefinition Height="22"/>  <!-- >100 ms -->
@@ -98,29 +78,17 @@
                     <RowDefinition Height="22"/>  <!-- >1000 ms -->
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0"  Text="Mean"      VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="0"  Grid.Column="1" x:Name="SMeanText"    Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="0"  Text="Max"       VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="0"  Grid.Column="1" x:Name="SMaxText"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="1"  Text="P50 ~"     VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="1"  Grid.Column="1" x:Name="SP50Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="2"  Text="&gt; 100 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2"  Grid.Column="1" x:Name="SOver100Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="2"  Text="P95 ~"     VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="2"  Grid.Column="1" x:Name="SP95Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="3"  Text="&gt; 250 ms"  VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="3"  Grid.Column="1" x:Name="SOver250Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
 
-                <TextBlock Grid.Row="3"  Text="P99 ~"     VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="3"  Grid.Column="1" x:Name="SP99Text"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="4"  Text="Max"       VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="4"  Grid.Column="1" x:Name="SMaxText"     Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="6"  Text="&gt; 100 ms"  VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="6"  Grid.Column="1" x:Name="SOver100Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="7"  Text="&gt; 250 ms"  VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="7"  Grid.Column="1" x:Name="SOver250Text"  Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
-
-                <TextBlock Grid.Row="8"  Text="&gt; 1000 ms" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="8"  Grid.Column="1" x:Name="SOver1000Text" Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
+                <TextBlock Grid.Row="4"  Text="&gt; 1000 ms" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="4"  Grid.Column="1" x:Name="SOver1000Text" Text="–" VerticalAlignment="Center" FontFamily="Consolas"/>
             </Grid>
 
             <Separator Margin="0,8"/>
@@ -128,6 +96,16 @@
             <!-- ── PROFILER ────────────────────────────────────────────── -->
             <TextBlock Text="PROFILER" FontSize="10" Opacity="0.6" Margin="0,0,0,4"/>
             <TextBlock x:Name="ProfilerStatusText" Text="Idle" TextWrapping="Wrap"/>
+            <TextBox x:Name="SnapshotListBox"
+                     IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                     TextWrapping="NoWrap"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     Height="80" Margin="0,6,0,0"
+                     FontFamily="Consolas" FontSize="11"
+                     Background="Transparent" BorderThickness="1"
+                     BorderBrush="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBorderBrushKey}}"
+                     Foreground="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowTextBrushKey}}"/>
 
         </StackPanel>
     </ScrollViewer>
